@@ -89,7 +89,7 @@ app.get('/api/users',(req,res) =>{
 app.get('/api/users/:_id/logs:from:to:limit',(req,res) =>{
   let {from,to,limit} = req.params;
   console.log(from,to,limit);
-  /*User.findOne({_id: req.params._id},(err,found) =>{
+  User.findOne({_id: req.params._id},(err,found) =>{
     if(err) return console.error(err);
     let l;
     let array;
@@ -103,28 +103,36 @@ app.get('/api/users/:_id/logs:from:to:limit',(req,res) =>{
     else l = limit;
     array = found.exercises.filter(exer =>{
       let item;
-      if(l <0){
-        if(from !== undefined && new Date(from) >= new Date(exer.date)){
+      let fro = req.query.from;
+      let to = req.query.to;
+      if(req.query.from === undefined){
+        fro = new Date(1990,1,1);
+      }
+      if(req.query.to === undefined){
+        to = new Date();
+      }
+      if(l >=0){
+        let date = new Date(exer.date);
+        
+        if(new Date(fro) >= date && new Date(to) <= date){
           item = exer;
         }
-        if(to !== undefined && new Date(to) <= new Date(exer.date)){
-          item = exer;
-        }
-        if(from !== undefined || to !== undefined && item !== undefined){
-          return item;
-        }
-        else{
-          return exer;
+        if(item === undefined){
+          item = false;
         }
         l--;
+        
+        return item;
       }
     });
   }
     res.send({
-      log: found.exercises,
-      count: found.exercises.length
+      username: found.name,
+      _id: found._id,
+      log: array,
+      count: array.length
     });
-  });*/
+  });
 });
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
