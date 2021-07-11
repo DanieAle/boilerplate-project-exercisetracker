@@ -42,33 +42,35 @@ app.post('/api/users',express.urlencoded({extended:true}),(req,res) =>{
   console.log('Creado....');
   res.send({username:user.name, _id: user._id});
 });
+
 app.post('/api/users/:_id/exercises',express.urlencoded({extended:true}),(req,res) =>{
   console.log(req.params,req.body);
   let exercise;
+  console.log(req.body.date);
   if(req.body.date === '' || req.body.date === undefined){
     exercise = {
       description: req.body.description,
       duration: req.body.duration,
-      date: new Date()
+      date: new Date().toDateString()
     }
   }
   else{
     exercise = {
       description: req.body.description,
       duration: req.body.duration,
-      date: new Date(req.body.date)
+      date: new Date(req.body.date).toDateString()
     }
   }
-  User.findOneAndUpdate({_id: req.params._id},{exercises:[exercise]},{new:true},
+  User.findOneAndUpdate({_id: req.params._id},{"$push":{exercises:exercise}},{new:true},
     (err,updated) =>{
       if(err) return console.error(err);
       console.log('Updated');
       res.send({
-        _id: req.params._id,
+        _id: updated._id,
         username: updated.name,
         description: req.body.description,
-        duration: req.body.duration,
-        date: exercise.date.toDateString()
+        duration: parseInt(req.body.duration),
+        date: exercise.date
       });
   });
 });
@@ -86,42 +88,44 @@ app.get('/api/users',(req,res) =>{
     res.send(users);
   });
 });
-app.get('/api/users/:_id/logs:from:to:limit',(req,res) =>{
-  let {from,to,limit} = req.params;
-  console.log(from,to,limit);
+
+app.get('/api/users/:_id/logs?',(req,res) =>{
+  console.log(req.query,req.params);
   User.findOne({_id: req.params._id},(err,found) =>{
     if(err) return console.error(err);
+    console.log(found);
     let l;
     let array;
-    if(limit === undefined && from === undefined && to === undefined){
+    if(req.query.limit === undefined && req.query.from === undefined && req.query.to === undefined){
       array = found.exercises;
     }
     else{
-    if(limit === undefined){
+    if(req.query.limit === undefined){
       l = found.exercises.length;
     }
-    else l = limit;
+    else l = req.query.limit;
     array = found.exercises.filter(exer =>{
       let item;
+      
       let fro = req.query.from;
       let to = req.query.to;
-      if(req.query.from === undefined){
-        fro = new Date(1990,1,1);
+      if(fro === undefined){
+        fro = new Date(1980,1,1);
       }
-      if(req.query.to === undefined){
+      if(to === undefined){
         to = new Date();
       }
-      if(l >=0){
+      if(l >0){
         let date = new Date(exer.date);
         
-        if(new Date(fro) >= date && new Date(to) <= date){
+        if(new Date(fro) <= date && new Date(to) >= date){
           item = exer;
         }
         if(item === undefined){
           item = false;
         }
         l--;
-        
+        console.log(item);
         return item;
       }
     });
