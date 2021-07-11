@@ -45,7 +45,7 @@ app.post('/api/users',express.urlencoded({extended:true}),(req,res) =>{
 app.post('/api/users/:_id/exercises',express.urlencoded({extended:true}),(req,res) =>{
   console.log(req.params,req.body);
   let exercise;
-  if(req.body.date === ''){
+  if(req.body.date === '' || req.body.date === undefined){
     exercise = {
       description: req.body.description,
       duration: req.body.duration,
@@ -64,11 +64,11 @@ app.post('/api/users/:_id/exercises',express.urlencoded({extended:true}),(req,re
       if(err) return console.error(err);
       console.log('Updated');
       res.send({
-        username: updated.name,
         _id: req.params._id,
+        username: updated.name,
         description: req.body.description,
         duration: req.body.duration,
-        date: exercise.date
+        date: exercise.date.toDateString()
       });
   });
 });
